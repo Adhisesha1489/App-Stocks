@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Stocks</title>
+    <title>Neon App Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs (Auth is not needed for this version) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -226,6 +226,14 @@
         .screenshots img { height: 120px; border-radius: 10px; }
         .reviews-section .review { border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem; }
         .review-header { display: flex; justify-content: space-between; align-items: center; }
+        .review-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+        .review-actions button { background: none; border: none; color: var(--text-color); font-size: 1rem; cursor: pointer; opacity: 0.7; }
+        .review-actions button:hover { opacity: 1; }
+        .review-actions button.voted { color: var(--glow-cyan); opacity: 1; }
+        .review-replies { margin-left: 2rem; margin-top: 1rem; border-left: 2px solid var(--border-color); padding-left: 1rem; }
+        .review-reply { margin-top: 0.5rem; font-size: 0.9rem; }
+        .review-reply strong { color: var(--glow-cyan); }
+        .reply-form { margin-top: 0.5rem; display: none; }
         .my-app-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color); }
         .review-star-selector { display: flex; flex-direction: row-reverse; justify-content: center; margin-bottom: 1rem; }
         .review-star-selector span { font-size: 2rem; color: rgba(255, 255, 255, 0.3); cursor: pointer; transition: color .2s, transform .2s; }
@@ -236,7 +244,7 @@
 <body>
     <header class="app-header">
         <span id="menu-icon">☰</span>
-        <h1 class="gradient-text">App Stocks</h1>
+        <h1 class="gradient-text">Neon App Hub</h1>
     </header>
 
     <div id="side-menu">
@@ -265,7 +273,7 @@
             <div class="form-page-container">
                 <div class="glass-box">
                     <h2 class="gradient-text">Your Profile</h2>
-                    <p style="text-align:center;opacity:.8;margin-bottom:2rem">This info is required to submit apps and receive notifications.</p>
+                    <p style="text-align:center;opacity:.8;margin-bottom:2rem">This info is required to submit, review, and reply.</p>
                     <form id="profile-form">
                         <input type="text" id="profile-name" placeholder="Your Display Name" required>
                         <input type="email" id="profile-email" placeholder="Your Email Address" required>
@@ -284,7 +292,7 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyDGqBvjShfx9zPAvpEJdoqD-0AiIdaepRo",
   authDomain: "an-app-store-8de57.firebaseapp.com",
   databaseURL: "https://an-app-store-8de57-default-rtdb.firebaseio.com",
@@ -292,16 +300,14 @@
   storageBucket: "an-app-store-8de57.firebasestorage.app",
   messagingSenderId: "4623788585",
   appId: "1:4623788585:web:b98791a1d17b6ae84e4a38"
-};        // --- END OF FIREBASE CONFIGURATION ---
+};       // --- END OF FIREBASE CONFIGURATION ---
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // --- DOM Elements ---
         const pages = document.querySelectorAll('.page'), contentGrid = document.getElementById('content-grid'), sideMenu = document.getElementById('side-menu'), detailsModalOverlay = document.getElementById('details-modal-overlay'), playModal = document.getElementById('play-modal'), playIframe = document.getElementById('play-iframe'), featuredScroller = document.getElementById('featured-scroller');
         let allItems = [], currentFilter = 'All', currentSort = 'newest';
         
-        // --- Navigation ---
         function showPage(pageId) {
             pages.forEach(p => p.classList.remove('active'));
             const pageToShow = document.getElementById(pageId);
@@ -313,7 +319,6 @@
         document.getElementById('close-menu').addEventListener('click', () => sideMenu.classList.remove('open'));
         document.querySelectorAll('.nav-link').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); const pageId = e.target.dataset.page; if (pageId) showPage(pageId); }); });
         
-        // --- Profile Management (localStorage) ---
         const profileForm = document.getElementById('profile-form'), profileName = document.getElementById('profile-name'), profileEmail = document.getElementById('profile-email'), logoutBtn = document.getElementById('logout-btn');
         profileName.value = localStorage.getItem('userName') || ''; 
         profileEmail.value = localStorage.getItem('userEmail') || '';
@@ -325,11 +330,10 @@
                 profileName.value = '';
                 profileEmail.value = '';
                 document.getElementById('profile-message').textContent = 'Profile cleared successfully.';
-                if (window.notificationListener) window.notificationListener.off(); // Stop listening
+                if (window.notificationListener) window.notificationListener.off();
             }
         });
 
-        // --- Upload Form ---
         const uploadForm = document.getElementById('upload-form');
         document.querySelectorAll('input[name="submissionType"]').forEach(radio => { radio.addEventListener('change', e => { document.getElementById('html-input-container').style.display = e.target.value === 'html' ? 'block' : 'none'; document.getElementById('link-input-container').style.display = e.target.value === 'link' ? 'block' : 'none'; }); });
         uploadForm.addEventListener('submit', e => {
@@ -342,7 +346,6 @@
             db.ref('pendingSubmissions').push(submissionData).then(() => { document.getElementById('upload-message').textContent = updateId ? 'Update sent for review!' : 'Submission sent for review!'; document.getElementById('upload-message').style.color = 'var(--glow-cyan)'; uploadForm.reset(); document.getElementById('update-item-id').value = ''; document.getElementById('upload-form-title').textContent = 'Submit Your Creation'; }).catch(err => document.getElementById('upload-message').textContent = err.message);
         });
 
-        // --- Data Fetching & Rendering ---
         function loadPublishedItems() { db.ref('items').on('value', snapshot => { allItems = []; if (snapshot.exists()) snapshot.forEach(child => allItems.push({ id: child.key, ...child.val() })); renderContent(); }); }
         
         function renderContent() {
@@ -371,7 +374,6 @@
             return card;
         }
 
-        // --- Event Listeners for Controls ---
         document.getElementById('search-bar').addEventListener('input', renderContent);
         document.getElementById('filter-buttons').addEventListener('click', e => { if (e.target.tagName === 'BUTTON') { document.getElementById('filter-buttons').querySelector('.active').classList.remove('active'); e.target.classList.add('active'); currentFilter = e.target.dataset.filter; renderContent(); } });
         document.getElementById('sort-controls').addEventListener('click', e => { if (e.target.tagName === 'BUTTON') { document.getElementById('sort-controls').querySelector('.active').classList.remove('active'); e.target.classList.add('active'); currentSort = e.target.dataset.sort; renderContent(); } });
@@ -379,7 +381,6 @@
         featuredScroller.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) showDetailsModal(card.dataset.id); });
         document.getElementById('close-details-modal').addEventListener('click', () => detailsModalOverlay.style.display = 'none');
 
-        // --- Details Modal ---
         async function showDetailsModal(itemId) {
             const item = allItems.find(i => i.id === itemId); if (!item) return;
             const screenshotsHTML = (item.screenshots || []).map(url => `<img src="${url}" alt="screenshot">`).join('');
@@ -427,7 +428,6 @@
         }
         document.querySelector('.close-fullscreen-btn').addEventListener('click', () => { playModal.style.display = 'none'; playIframe.srcdoc = ''; });
 
-        // --- My Apps & Update Requests ---
         function loadMyApps() {
             const userEmail = localStorage.getItem('userEmail');
             const listEl = document.getElementById('my-apps-list');
@@ -453,7 +453,6 @@
             document.getElementById('upload-html').value = item.htmlCode || ''; document.getElementById('upload-link').value = item.downloadLink || ''; document.getElementById('upload-screenshots').value = (item.screenshots || []).join(', ');
         };
 
-        // --- Reviews & Ratings ---
         function loadReviews(itemId) {
             const listEl = document.getElementById('reviews-list');
             const currentUserName = localStorage.getItem('userName'), currentUserEmail = localStorage.getItem('userEmail');
@@ -465,15 +464,87 @@
                     const reviewEl = document.createElement('div');
                     reviewEl.className = 'review';
                     const starsHTML = Array.from({ length: 5 }, (_, i) => `<span style="color:var(--gold);">${i < review.rating ? '★' : '☆'}</span>`).join('');
+                    
                     let deleteBtnHTML = '';
                     if (review.userName === currentUserName && review.userEmail === currentUserEmail) {
                         deleteBtnHTML = `<button class="btn-delete-review" onclick="window.deleteReview('${itemId}', '${review.id}', ${review.rating})">Delete</button>`;
                     }
-                    reviewEl.innerHTML = `<div class="review-header"><strong>${review.userName}</strong>${deleteBtnHTML}</div><span class="star-rating-display">${starsHTML}</span><p>${review.comment || ''}</p>`;
+
+                    const likeCount = review.likes || 0;
+                    const dislikeCount = review.dislikes || 0;
+                    const votedStatus = localStorage.getItem(`voted_${review.id}`);
+                    
+                    const repliesHTML = (review.replies ? Object.values(review.replies) : []).map(reply => `<div class="review-reply"><strong>${reply.userName}:</strong> ${reply.text}</div>`).join('');
+                    
+                    reviewEl.innerHTML = `
+                        <div class="review-header"><strong>${review.userName}</strong>${deleteBtnHTML}</div>
+                        <span class="star-rating-display">${starsHTML}</span>
+                        <p>${review.comment || ''}</p>
+                        <div class="review-actions">
+                            <button class="${votedStatus === 'liked' ? 'voted' : ''}" onclick="window.voteOnReview('${itemId}', '${review.id}', 'like')">👍 ${likeCount}</button>
+                            <button class="${votedStatus === 'disliked' ? 'voted' : ''}" onclick="window.voteOnReview('${itemId}', '${review.id}', 'dislike')">👎 ${dislikeCount}</button>
+                            <button onclick="window.toggleReplyForm('${review.id}')">Reply</button>
+                        </div>
+                        <div class="review-replies">${repliesHTML}</div>
+                        <form class="reply-form" id="reply-form-${review.id}">
+                            <textarea rows="2" placeholder="Write a reply..."></textarea>
+                            <button type="submit" class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Post Reply</button>
+                        </form>
+                    `;
                     listEl.appendChild(reviewEl);
+                    listEl.querySelector(`#reply-form-${review.id}`).addEventListener('submit', e => { e.preventDefault(); postReply(itemId, review.id); });
                 });
             });
         }
+
+        window.toggleReplyForm = (reviewId) => {
+            const replyForm = document.getElementById(`reply-form-${reviewId}`);
+            if(replyForm) {
+                const hasProfile = !!(localStorage.getItem('userName') && localStorage.getItem('userEmail'));
+                if (hasProfile) {
+                     replyForm.style.display = replyForm.style.display === 'block' ? 'none' : 'block';
+                } else {
+                    alert('Please create a profile to reply.');
+                    showPage('profile');
+                }
+            }
+        };
+
+        function postReply(itemId, reviewId) {
+            const replyForm = document.getElementById(`reply-form-${reviewId}`);
+            const replyText = replyForm.querySelector('textarea').value.trim();
+            const userName = localStorage.getItem('userName');
+            if (replyText && userName) {
+                const replyData = {
+                    userName: userName,
+                    text: replyText,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+                db.ref(`reviews/${itemId}/${reviewId}/replies`).push(replyData);
+                replyForm.reset();
+                replyForm.style.display = 'none';
+            }
+        }
+
+        window.voteOnReview = (itemId, reviewId, voteType) => {
+            const hasProfile = !!(localStorage.getItem('userName') && localStorage.getItem('userEmail'));
+            if (!hasProfile) {
+                alert('Please create a profile to vote.');
+                showPage('profile');
+                return;
+            }
+
+            const votedKey = `voted_${reviewId}`;
+            if (localStorage.getItem(votedKey)) {
+                alert("You've already voted on this review.");
+                return;
+            }
+            
+            const voteRef = db.ref(`reviews/${itemId}/${reviewId}/${voteType}s`);
+            voteRef.transaction(currentVotes => (currentVotes || 0) + 1);
+            localStorage.setItem(votedKey, voteType === 'like' ? 'liked' : 'disliked');
+        };
+
         window.deleteReview = (itemId, reviewId, rating) => {
             if (confirm('Are you sure you want to delete your review?')) {
                 db.ref(`reviews/${itemId}/${reviewId}`).remove().then(() => {
@@ -491,6 +562,7 @@
                 });
             }
         };
+
         function submitReview(itemId, rating) {
             const userName = localStorage.getItem('userName'), userEmail = localStorage.getItem('userEmail');
             if (!userName || !userEmail || rating === 0 || localStorage.getItem(`rated_${itemId}_by_${userEmail}`)) return;
@@ -503,13 +575,12 @@
                 }
                 return item;
             }).then(() => {
-                db.ref(`reviews/${itemId}`).push({ userName, userEmail, rating, comment, timestamp: firebase.database.ServerValue.TIMESTAMP });
+                db.ref(`reviews/${itemId}`).push({ userName, userEmail, rating, comment, timestamp: firebase.database.ServerValue.TIMESTAMP, likes: 0, dislikes: 0 });
                 localStorage.setItem(`rated_${itemId}_by_${userEmail}`, true);
                 showDetailsModal(itemId);
             });
         }
 
-        // --- Notifications ---
         let notificationListener = null;
         function listenForNotifications() {
             if (window.notificationListener) window.notificationListener.off();
@@ -533,7 +604,6 @@
             setTimeout(() => toast.remove(), 8000);
         }
         
-        // --- Initial Load ---
         loadPublishedItems();
         listenForNotifications();
     });
