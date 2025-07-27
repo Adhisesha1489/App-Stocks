@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon App Hub</title>
+    <title>App Stocks</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
@@ -131,7 +131,7 @@
 <body>
     <header class="app-header">
         <span id="menu-icon">☰</span>
-        <h1 class="gradient-text">Neon App Hub</h1>
+        <h1 class="gradient-text">App Stocks</h1>
     </header>
 
     <div id="side-menu">
@@ -179,9 +179,15 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- IMPORTANT: 🔥 PASTE YOUR FIREBASE CONFIGURATION HERE 🔥 ---
-        const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", databaseURL: "YOUR_DATABASE_URL", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID" };
-        // --- END OF FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyDGqBvjShfx9zPAvpEJdoqD-0AiIdaepRo",
+  authDomain: "an-app-store-8de57.firebaseapp.com",
+  databaseURL: "https://an-app-store-8de57-default-rtdb.firebaseio.com",
+  projectId: "an-app-store-8de57",
+  storageBucket: "an-app-store-8de57.firebasestorage.app",
+  messagingSenderId: "4623788585",
+  appId: "1:4623788585:web:b98791a1d17b6ae84e4a38"
+};        // --- END OF FIREBASE CONFIGURATION ---
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
